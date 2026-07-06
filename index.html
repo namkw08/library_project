@@ -5,16 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>무인 대출 시스템 - 사용자 인증</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h2>📚 무인 도서 대출 시스템</h2>
+        
+        <div class="admin-section">
+            <label class="admin-label">⚙️ 관리자: 연체자 엑셀 등록</label>
+            <input type="file" id="overdueFile" accept=".xlsx, .xls">
+            <p class="admin-help">※ '학번' 열이 포함된 엑셀 파일을 첨부하세요.</p>
+        </div>
+
         <p class="subtitle">학번과 이름을 입력해 주세요.</p>
         
         <form id="loginForm">
             <div class="input-group">
                 <label for="studentId">학번 (5자리)</label>
-                <input type="text" id="studentId" placeholder="예: 30101 (3학년 1반 1번)" maxlength="5" required>
+                <input type="text" id="studentId" placeholder="예: 30205 (3학년 2반 5번)" maxlength="5" required>
             </div>
             <div class="input-group">
                 <label for="studentName">이름</label>
@@ -30,32 +38,58 @@
     </div>
 
     <script>
-        // [엑셀 데이터시트 #1] 연체자 학번 데이터 목록
-        const overdueExcelSheet = ["30201", "30202", "10115"];
+        // 업로드된 엑셀에서 추출한 연체자 학번을 저장할 배열
+        let overdueStudents = [];
 
-        // 페이지 로드 시 기존 입력 값 복원
+        // 엑셀 파일 읽기 이벤트 처리
+        document.getElementById('overdueFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                // 첫 번째 시트 가져오기
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                
+                // 행렬 데이터를 JSON 배열로 변환
+                const rows = XLSX.utils.sheet_to_json(sheet);
+                
+                // '학번' 컬럼의 데이터만 뽑아서 배열에 저장 (문자열로 변환)
+                overdueStudents = rows.map(row => String(row['학번'] || row['학번 '] || '')).filter(id => id.length > 0);
+                
+                alert(`✅ 연체자 목록 엑셀 반영 완료! (총 ${overdueStudents.length}명 등록됨)`);
+                // 세션 스토리지에 임시 저장하여 페이지를 이동해도 유지되도록 함
+                localStorage.setItem('overdueList', JSON.stringify(overdueStudents));
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 페이지 로드 시 기존 세션 데이터 복원
         window.addEventListener('DOMContentLoaded', () => {
             const savedUser = JSON.parse(localStorage.getItem('currentUser'));
             if (savedUser) {
                 document.getElementById('studentId').value = savedUser.id;
                 document.getElementById('studentName').value = savedUser.name;
             }
+            // 기존에 등록된 연체자 리스트가 있다면 불러오기
+            const savedOverdue = localStorage.getItem('overdueList');
+            if (savedOverdue) {
+                overdueStudents = JSON.parse(savedOverdue);
+            }
         });
 
-        // 학번 유효성 검증 함수 (1~3학년, 1~9반, 1~25번)
+        // 학번 포맷 유효성 검증 (1~3학년, 1~9반, 1~25번)
         function isValidStudentId(id) {
             if (id.length !== 5 || isNaN(id)) return false;
-            
-            const grade = parseInt(id.substring(0, 1));      // 첫 번째 자리: 학년
-            const classNum = parseInt(id.substring(1, 3));   // 2,3번째 자리: 반
-            const studentNum = parseInt(id.substring(3, 5)); // 4,5번째 자리: 번호
+            const grade = parseInt(id.substring(0, 1));
+            const classNum = parseInt(id.substring(1, 3));
+            const studentNum = parseInt(id.substring(3, 5));
 
-            // 조건 비교
-            const isGradeValid = (grade >= 1 && grade <= 3);
-            const isClassValid = (classNum >= 1 && classNum <= 9);
-            const isNumValid = (studentNum >= 1 && studentNum <= 25);
-
-            return isGradeValid && isClassValid && isNumValid;
+            return (grade >= 1 && grade <= 3) && (classNum >= 1 && classNum <= 9) && (studentNum >= 1 && studentNum <= 25);
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -65,21 +99,20 @@
             const studentName = document.getElementById('studentName').value.trim();
             const alertBox = document.getElementById('alertMessage');
 
-            // 1. 엑셀 기준 학번 존재 여부(학년/반/번 범위) 확인
+            // 1. 학번 규칙 검사
             if (!isValidStudentId(studentId)) {
-                alertBox.innerHTML = `❌ <strong>존재하지 않는 학번</strong><br>입력하신 학번은 유효하지 않거나 존재하지 않는 학번입니다.<br>(1~3학년, 1~9반, 1~25번만 가능)`;
+                alertBox.innerHTML = `❌ <strong>존재하지 않는 학번</strong><br>유효하지 않은 학번입니다. (1~3학년, 1~9반, 1~25번 범위 내 입력)`;
                 alertBox.className = "alert-box danger";
                 alertBox.classList.remove('hidden');
                 return;
             }
 
-            // 2. 엑셀 기준 연체 기록 확인
-            if (overdueExcelSheet.includes(studentId)) {
-                alertBox.innerHTML = `⚠️ <strong>대출 불가 (연체자 고지)</strong><br>[${studentName}]님은 현재 엑셀 연체자 목록에 기록이 있어 무인 대출이 불가능합니다.`;
+            // 2. 실제 첨부된 엑셀 데이터와 연체자 비교
+            if (overdueStudents.includes(studentId)) {
+                alertBox.innerHTML = `⚠️ <strong>대출 불가 (연체자 고지)</strong><br>[${studentName}]님은 업로드된 연체자 엑셀 명단에 기록이 존재하여 무인 대출이 제한됩니다.`;
                 alertBox.className = "alert-box danger";
                 alertBox.classList.remove('hidden');
             } else {
-                // 3. 통과 시 데이터 저장 후 이동
                 alertBox.classList.add('hidden');
                 localStorage.setItem('currentUser', JSON.stringify({ id: studentId, name: studentName }));
                 window.location.href = 'loan.html';
