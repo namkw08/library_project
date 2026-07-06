@@ -63,7 +63,6 @@ h2 {
     outline: none;
 }
 
-/* 버튼 가로 정렬 그룹 */
 .btn-group {
     display: flex;
     gap: 15px;
@@ -71,7 +70,7 @@ h2 {
 }
 
 .btn {
-    flex: 1; /* 버튼들이 동일한 비율로 채워지도록 설정 */
+    flex: 1;
     padding: 14px;
     background-color: #007bff;
     color: white;
@@ -95,7 +94,6 @@ h2 {
     background-color: #5a6268;
 }
 
-/* 비활성화 버튼 디자인 */
 .btn:disabled {
     background-color: #e0e0e0;
     color: #a0a0a0;
