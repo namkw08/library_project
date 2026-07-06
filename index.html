@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무인 대출 시스템 - 사용자 인증</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>📚 무인 도서 대출 시스템</h2>
+        <p class="subtitle">학번과 이름을 입력해 주세요.</p>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="studentId">학번 (5자리)</label>
+                <input type="text" id="studentId" placeholder="예: 30205 (3학년 2반 5번)" maxlength="5" required>
+            </div>
+            <div class="input-group">
+                <label for="studentName">이름</label>
+                <input type="text" id="studentName" placeholder="예: 홍길동" required>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" disabled>이전</button>
+                <button type="submit" class="btn">다음</button>
+            </div>
+        </form>
+
+        <div id="alertMessage" class="alert-box hidden"></div>
+    </div>
+
+    <script>
+        // 가상의 연체자 학번 목록 (5자리 형식 예시)
+        const overdueStudents = ["30201", "30202", "10115"];
+
+        // 페이지 로드 시 기존 입력 값이 있다면 복원 (이전 버튼으로 돌아왔을 때를 위함)
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (savedUser) {
+                document.getElementById('studentId').value = savedUser.id;
+                document.getElementById('studentName').value = savedUser.name;
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studentId = document.getElementById('studentId').value.trim();
+            const studentName = document.getElementById('studentName').value.trim();
+            const alertBox = document.getElementById('alertMessage');
+
+            // 간단한 자릿수 유효성 검사
+            if (studentId.length !== 5 || isNaN(studentId)) {
+                alertBox.textContent = "❌ 학번은 5자리 숫자(예: 30205)로 입력해 주세요.";
+                alertBox.className = "alert-box danger";
+                alertBox.classList.remove('hidden');
+                return;
+            }
+
+            // 1. 연체자 여부 확인
+            if (overdueStudents.includes(studentId)) {
+                alertBox.textContent = `⚠️ 대출 불가: [${studentName}]님은 현재 연체 기록이 있어 무인 대출이 제한됩니다. 도서관 직원에게 문의하세요.`;
+                alertBox.className = "alert-box danger";
+                alertBox.classList.remove('hidden');
+            } else {
+                // 2. 통과 시 데이터 저장 후 다음 페이지 이동
+                alertBox.classList.add('hidden');
+                localStorage.setItem('currentUser', JSON.stringify({ id: studentId, name: studentName }));
+                window.location.href = 'loan.html';
+            }
+        });
+    </script>
+</body>
+</html>
