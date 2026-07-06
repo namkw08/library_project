@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무인 대출 시스템 - 도서 정보 입력</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>📖 대출 도서 정보 입력</h2>
+        <p class="subtitle"><span id="userName" class="highlight"></span>님, 대출할 도서 정보를 입력해 주세요.</p>
+        
+        <form id="loanForm">
+            <div class="input-group">
+                <label for="bookTitle">도서명</label>
+                <input type="text" id="bookTitle" placeholder="정확한 도서명을 입력하세요" required>
+            </div>
+            <div class="input-group">
+                <label for="bookAuthor">저자</label>
+                <input type="text" id="bookAuthor" placeholder="저자 이름을 입력하세요" required>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" id="prevBtn">이전</button>
+                <button type="submit" class="btn">대출 신청</button>
+            </div>
+        </form>
+
+        <div id="resultMessage" class="alert-box hidden"></div>
+    </div>
+
+    <script>
+        // 로그인 정보가 없으면 첫 페이지로 튕겨내기
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            alert('잘못된 접근입니다. 학번 입력을 먼저 해주세요.');
+            window.location.href = 'index.html';
+        } else {
+            // 학번과 이름을 가독성 좋게 출력 (예: 30205 홍길동님)
+            document.getElementById('userName').textContent = `${currentUser.id} ${currentUser.name}`;
+        }
+
+        // 도서관 보유 도서 목록
+        const libraryBooks = [
+            { title: "인간 실격", author: "다자이 오사무" },
+            { title: "자바스크립트 완벽 가이드", author: "데이비드 플래너건" },
+            { title: "데미안", author: "헤르만 헤세" },
+            { title: "트렌드 코리아 2026", author: "김난도" }
+        ];
+
+        // 이전 버튼 클릭 시 정보 유지를 한 채 첫 페이지로 이동
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+        document.getElementById('loanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('bookTitle').value.trim();
+            const author = document.getElementById('bookAuthor').value.trim();
+            const resultBox = document.getElementById('resultMessage');
+
+            // 도서명과 저자 일치 여부 확인
+            const bookExists = libraryBooks.some(book => book.title === title && book.author === author);
+
+            if (bookExists) {
+                resultBox.innerHTML = `🎉 <strong>대출 완료!</strong><br>'${title}' 대출 처리가 완료되었습니다. 반납 기한을 지켜주세요.`;
+                resultBox.className = "alert-box success";
+                
+                // 대출 성공 시 세션 데이터 삭제를 원하시면 주석 해제하세요.
+                // localStorage.removeItem('currentUser');
+            } else {
+                resultBox.innerHTML = `❌ <strong>조회 실패</strong><br>입력하신 '${title}' (${author} 저) 도서는 본 도서관에 존재하지 않거나 정보가 일치하지 않습니다.`;
+                resultBox.className = "alert-box danger";
+            }
+            resultBox.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
