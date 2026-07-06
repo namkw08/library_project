@@ -5,7 +5,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    padding: 20px;
 }
 
 .container {
@@ -14,20 +15,49 @@ body {
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     width: 100%;
-    max-width: 450px;
+    max-width: 460px;
     box-sizing: border-box;
+}
+
+/* 관리자 파일 업로드 영역 추가 */
+.admin-section {
+    background-color: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+}
+
+.admin-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.admin-section input[type="file"] {
+    width: 100%;
+    font-size: 0.8rem;
+}
+
+.admin-help {
+    font-size: 0.75rem;
+    color: #868e96;
+    margin: 5px 0 0 0;
 }
 
 h2 {
     margin-top: 0;
     color: #333;
     text-align: center;
+    margin-bottom: 20px;
 }
 
 .subtitle {
     color: #666;
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     font-size: 0.95rem;
 }
 
@@ -48,7 +78,7 @@ h2 {
     font-size: 0.9rem;
 }
 
-.input-group input {
+.input-group input[type="text"] {
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
@@ -58,7 +88,7 @@ h2 {
     transition: border 0.3s;
 }
 
-.input-group input:focus {
+.input-group input[type="text"]:focus {
     border-color: #007bff;
     outline: none;
 }
