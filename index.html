@@ -5,18 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>무인 대출 시스템 - 사용자 인증</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h2>📚 무인 도서 대출 시스템</h2>
-        
-        <div class="admin-section">
-            <label class="admin-label">⚙️ 관리자: 연체자 엑셀 등록</label>
-            <input type="file" id="overdueFile" accept=".xlsx, .xls">
-            <p class="admin-help">※ '학번' 열이 포함된 엑셀 파일을 첨부하세요.</p>
-        </div>
-
         <p class="subtitle">학번과 이름을 입력해 주세요.</p>
         
         <form id="loginForm">
@@ -37,48 +29,15 @@
         <div id="alertMessage" class="alert-box hidden"></div>
     </div>
 
+    <a href="admin.html" class="floating-admin-btn" title="관리자 설정">⚙️</a>
+
     <script>
-        // 업로드된 엑셀에서 추출한 연체자 학번을 저장할 배열
-        let overdueStudents = [];
-
-        // 엑셀 파일 읽기 이벤트 처리
-        document.getElementById('overdueFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const data = new Uint8Array(evt.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                
-                // 첫 번째 시트 가져오기
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                
-                // 행렬 데이터를 JSON 배열로 변환
-                const rows = XLSX.utils.sheet_to_json(sheet);
-                
-                // '학번' 컬럼의 데이터만 뽑아서 배열에 저장 (문자열로 변환)
-                overdueStudents = rows.map(row => String(row['학번'] || row['학번 '] || '')).filter(id => id.length > 0);
-                
-                alert(`✅ 연체자 목록 엑셀 반영 완료! (총 ${overdueStudents.length}명 등록됨)`);
-                // 세션 스토리지에 임시 저장하여 페이지를 이동해도 유지되도록 함
-                localStorage.setItem('overdueList', JSON.stringify(overdueStudents));
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        // 페이지 로드 시 기존 세션 데이터 복원
+        // 페이지 로드 시 기존 입력 값 복원
         window.addEventListener('DOMContentLoaded', () => {
             const savedUser = JSON.parse(localStorage.getItem('currentUser'));
             if (savedUser) {
                 document.getElementById('studentId').value = savedUser.id;
                 document.getElementById('studentName').value = savedUser.name;
-            }
-            // 기존에 등록된 연체자 리스트가 있다면 불러오기
-            const savedOverdue = localStorage.getItem('overdueList');
-            if (savedOverdue) {
-                overdueStudents = JSON.parse(savedOverdue);
             }
         });
 
@@ -107,9 +66,10 @@
                 return;
             }
 
-            // 2. 실제 첨부된 엑셀 데이터와 연체자 비교
+            // 2. 관리자 페이지에서 등록한 연체자 엑셀 데이터 가져와 비교
+            const overdueStudents = JSON.parse(localStorage.getItem('overdueList') || "[]");
             if (overdueStudents.includes(studentId)) {
-                alertBox.innerHTML = `⚠️ <strong>대출 불가 (연체자 고지)</strong><br>[${studentName}]님은 업로드된 연체자 엑셀 명단에 기록이 존재하여 무인 대출이 제한됩니다.`;
+                alertBox.innerHTML = `⚠️ <strong>대출 불가 (연체자 고지)</strong><br>[${studentName}]님은 현재 연체 기록이 확인되어 무인 대출이 제한됩니다.`;
                 alertBox.className = "alert-box danger";
                 alertBox.classList.remove('hidden');
             } else {
