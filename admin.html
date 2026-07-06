@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무인 대출 시스템 - 관리자 설정</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>⚙️ 시스템 관리자 설정</h2>
+        <p class="subtitle">무인 대출 검증용 엑셀 파일을 등록해 주세요.</p>
+        
+        <div class="admin-panel">
+            <label class="admin-label">1. 연체자 목록 파일 (.xlsx)</label>
+            <input type="file" id="overdueFile" accept=".xlsx, .xls">
+            <p id="overdueStatus" class="status-text text-gray">등록된 파일 없음</p>
+        </div>
+
+        <div class="admin-panel">
+            <label class="admin-label">2. 도서관 보유 목록 파일 (.xlsx)</label>
+            <input type="file" id="bookFile" accept=".xlsx, .xls">
+            <p id="bookStatus" class="status-text text-gray">등록된 파일 없음</p>
+        </div>
+
+        <button type="button" class="btn" onclick="location.href='index.html'">◀ 메인 화면으로 돌아가기</button>
+    </div>
+
+    <script>
+        // 페이지 로드 시 기존에 등록해둔 데이터 수량 표시
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedOverdue = JSON.parse(localStorage.getItem('overdueList') || "[]");
+            const savedBooks = JSON.parse(localStorage.getItem('libraryBookList') || "[]");
+            
+            if(savedOverdue.length > 0) document.getElementById('overdueStatus').innerHTML = `🟢 현재 <strong>${savedOverdue.length}명</strong>의 연체자 등록 중`;
+            if(savedBooks.length > 0) document.getElementById('bookStatus').innerHTML = `🟢 현재 <strong>${savedBooks.length}권</strong>의 보유 도서 등록 중`;
+        });
+
+        // 1. 연체자 엑셀 처리
+        document.getElementById('overdueFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                const overdueStudents = rows.map(row => String(row['학번'] || row['학번 '] || '')).filter(id => id.length > 0);
+                
+                localStorage.setItem('overdueList', JSON.stringify(overdueStudents));
+                document.getElementById('overdueStatus').innerHTML = `🔥 반영 완료: <strong>${overdueStudents.length}명</strong> 등록됨`;
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 2. 보유 도서 엑셀 처리
+        document.getElementById('bookFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                const libraryBooks = rows.map(row => ({
+                    title: String(row['도서명'] || '').trim(),
+                    author: String(row['저자'] || '').trim()
+                })).filter(book => book.title.length > 0);
+
+                localStorage.setItem('libraryBookList', JSON.stringify(libraryBooks));
+                document.getElementById('bookStatus').innerHTML = `📚 반영 완료: <strong>${libraryBooks.length}권</strong> 등록됨`;
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
