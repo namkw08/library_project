@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무인 대출 시스템 - 대출 내역 관리</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container" style="max-width: 800px;">
+        <h2>대출 내역 목록</h2>
+        <p class="subtitle">현재까지 누적된 대출 신청 목록입니다.</p>
+
+        <div class="btn-group" style="margin-top: 0; margin-bottom: 20px;">
+            <button type="button" class="btn" id="downloadBtn">전체 엑셀 다운로드</button>
+            <button type="button" class="btn btn-secondary" onclick="location.href='admin.html'">설정으로 돌아가기</button>
+        </div>
+
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>학번</th>
+                    <th>이름</th>
+                    <th>도서명</th>
+                    <th>저자</th>
+                    <th>대출일시</th>
+                </tr>
+            </thead>
+            <tbody id="historyTbody">
+                <!-- 자바스크립트를 통해 데이터가 삽입되는 영역 -->
+            </tbody>
+        </table>
+        
+        <div id="emptyMessage" class="empty-msg hidden">현재 등록된 대출 내역이 없습니다.</div>
+    </div>
+
+    <script>
+        const historyData = JSON.parse(localStorage.getItem('loanHistory') || "[]");
+        const tbody = document.getElementById('historyTbody');
+        const emptyMsg = document.getElementById('emptyMessage');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        if (historyData.length === 0) {
+            emptyMsg.classList.remove('hidden');
+            downloadBtn.disabled = true;
+        } else {
+            historyData.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${record.studentId}</td>
+                    <td>${record.name}</td>
+                    <td>${record.bookTitle}</td>
+                    <td>${record.bookAuthor}</td>
+                    <td>${record.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            const excelData = [["학번", "이름", "도서명", "저자", "대출일시"]];
+            
+            historyData.forEach(record => {
+                excelData.push([record.studentId, record.name, record.bookTitle, record.bookAuthor, record.date]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "전체 대출 기록");
+            worksheet['!cols'] = [{wch: 12}, {wch: 12}, {wch: 30}, {wch: 20}, {wch: 20}];
+
+            const today = new Date();
+            const fileName = `전체대출내역_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.xlsx`;
+            
+            XLSX.writeFile(workbook, fileName);
+        });
+    </script>
+</body>
+</html>
