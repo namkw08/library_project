@@ -50,37 +50,38 @@
             const author = document.getElementById('bookAuthor').value.trim();
             const resultBox = document.getElementById('resultMessage');
 
-            // 관리자 페이지에서 등록한 보유 도서 데이터 가져오기
             const libraryBooks = JSON.parse(localStorage.getItem('libraryBookList') || "[]");
             const bookExists = libraryBooks.some(book => book.title === title && book.author === author);
 
             if (bookExists) {
-                resultBox.innerHTML = `<strong>대출 완료!</strong><br>'${title}' 대출 처리가 완료되었습니다. 대출 내역 엑셀 다운로드를 확인하세요.`;
+                // 성공 시 localStorage에 기록 저장
+                const today = new Date();
+                const loanDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')} ${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
+                
+                const newRecord = {
+                    studentId: currentUser.id,
+                    name: currentUser.name,
+                    bookTitle: title,
+                    bookAuthor: author,
+                    date: loanDate
+                };
+
+                const history = JSON.parse(localStorage.getItem('loanHistory') || "[]");
+                history.push(newRecord);
+                localStorage.setItem('loanHistory', JSON.stringify(history));
+
+                resultBox.innerHTML = `<strong>대출 완료</strong><br>'${title}' 대출 처리가 완료되었습니다.`;
                 resultBox.className = "alert-box success";
-                exportToExcel(currentUser.id, currentUser.name, title, author);
+                
+                // 입력창 초기화
+                document.getElementById('bookTitle').value = '';
+                document.getElementById('bookAuthor').value = '';
             } else {
                 resultBox.innerHTML = `<strong>존재하지 않는 도서 고지</strong><br>입력하신 '${title}' (${author} 저) 도서는 본 도서관 보유 데이터에 존재하지 않습니다.`;
                 resultBox.className = "alert-box danger";
             }
             resultBox.classList.remove('hidden');
         });
-
-        function exportToExcel(studentId, name, bookTitle, bookAuthor) {
-            const today = new Date();
-            const loanDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')} ${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
-
-            const excelData = [
-                ["학번", "이름", "도서명", "저자", "대출일시"],
-                [studentId, name, bookTitle, bookAuthor, loanDate]
-            ];
-
-            const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "대출 기록");
-            worksheet['!cols'] = [{wch: 12}, {wch: 12}, {wch: 25}, {wch: 20}, {wch: 20}];
-
-            XLSX.writeFile(workbook, `도서대출기록_${studentId}.xlsx`);
-        }
     </script>
 </body>
 </html>
