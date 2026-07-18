@@ -8,16 +8,18 @@
 </head>
 <body>
     <div class="container">
-        <h2>📚 무인 도서 대출 시스템</h2>
+        <h2>무인 도서 대출 시스템</h2>
         <p class="subtitle">학번과 이름을 입력해 주세요.</p>
         
         <form id="loginForm">
             <div class="input-group">
                 <label for="studentId">학번 (5자리)</label>
-                <input type="text" id="studentId" placeholder="예: 30205 (3학년 2반 5번)" maxlength="5" required>
+                <!-- 예시 텍스트 변경 적용 -->
+                <input type="text" id="studentId" placeholder="예: 10101" maxlength="5" required>
             </div>
             <div class="input-group">
                 <label for="studentName">이름</label>
+                <!-- 예시 텍스트 변경 적용 -->
                 <input type="text" id="studentName" placeholder="예: 홍길동" required>
             </div>
             <div class="btn-group">
@@ -60,7 +62,7 @@
 
             // 1. 학번 규칙 검사
             if (!isValidStudentId(studentId)) {
-                alertBox.innerHTML = `❌ <strong>존재하지 않는 학번</strong><br>유효하지 않은 학번입니다. (1~3학년, 1~9반, 1~25번 범위 내 입력)`;
+                alertBox.innerHTML = `<strong>존재하지 않는 학번</strong><br>유효하지 않은 학번입니다. (1~3학년, 1~9반, 1~25번 범위 내 입력)`;
                 alertBox.className = "alert-box danger";
                 alertBox.classList.remove('hidden');
                 return;
@@ -69,7 +71,7 @@
             // 2. 관리자 페이지에서 등록한 연체자 엑셀 데이터 가져와 비교
             const overdueStudents = JSON.parse(localStorage.getItem('overdueList') || "[]");
             if (overdueStudents.includes(studentId)) {
-                alertBox.innerHTML = `⚠️ <strong>대출 불가 (연체자 고지)</strong><br>[${studentName}]님은 현재 연체 기록이 확인되어 무인 대출이 제한됩니다.`;
+                alertBox.innerHTML = `<strong>대출 불가 (연체자 고지)</strong><br>[${studentName}]님은 현재 연체 기록이 확인되어 무인 대출이 제한됩니다.`;
                 alertBox.className = "alert-box danger";
                 alertBox.classList.remove('hidden');
             } else {
