@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>📖 대출 도서 정보 입력</h2>
+        <h2>대출 도서 정보 입력</h2>
         <p class="subtitle"><span id="userName" class="highlight"></span>님, 대출할 도서 정보를 입력해 주세요.</p>
         
         <form id="loanForm">
@@ -55,11 +55,11 @@
             const bookExists = libraryBooks.some(book => book.title === title && book.author === author);
 
             if (bookExists) {
-                resultBox.innerHTML = `🎉 <strong>대출 완료!</strong><br>'${title}' 대출 처리가 완료되었습니다. 대출 내역 엑셀 다운로드를 확인하세요.`;
+                resultBox.innerHTML = `<strong>대출 완료!</strong><br>'${title}' 대출 처리가 완료되었습니다. 대출 내역 엑셀 다운로드를 확인하세요.`;
                 resultBox.className = "alert-box success";
                 exportToExcel(currentUser.id, currentUser.name, title, author);
             } else {
-                resultBox.innerHTML = `❌ <strong>존재하지 않는 도서 고지</strong><br>입력하신 '${title}' (${author} 저) 도서는 본 도서관 보유 데이터에 존재하지 않습니다.`;
+                resultBox.innerHTML = `<strong>존재하지 않는 도서 고지</strong><br>입력하신 '${title}' (${author} 저) 도서는 본 도서관 보유 데이터에 존재하지 않습니다.`;
                 resultBox.className = "alert-box danger";
             }
             resultBox.classList.remove('hidden');
