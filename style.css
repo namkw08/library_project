@@ -127,7 +127,7 @@ h2 {
 
 .text-gray { color: #868e96; }
 
-/* 🌟 우측 하단 고정형 관리자 설정 버튼 (요청 사항 핵심) */
+/* 우측 하단 고정형 관리자 설정 버튼 */
 .floating-admin-btn {
     position: fixed;
     bottom: 30px;
